@@ -35,36 +35,37 @@ interface LocalStorageHOCOptions {
 
 
 export const savesStateTolocalStorage = (args: LocalStorageHOCOptions) =>
-    <TOriginalProps extends {}>(
-        Component: (React.ComponentClass<TOriginalProps> | React.StatelessComponent<TOriginalProps>)
-    ) => {
-            const { storrageKey, whiteListObject } = args;
-            // Return Component if no localStorage is available
-            if(!hasLocalStorage) return Component
+    <TOriginalProps extends {}>(Component: (React.ComponentClass<TOriginalProps>)): React.ComponentClass<TOriginalProps> => {
+        const { storrageKey, whiteListObject } = args;
+        // Return Component if no localStorage is available
+        if (!hasLocalStorage) {
+            return Component;
+        }
 
-            let name = storrageKey;
 
-            class LocalStorageComponent extends React.Component<TOriginalProps, {}> {
+        let name = storrageKey;
+
+        class LocalStorageComponent extends React.Component<TOriginalProps, {}> {
 
             componentWillMount() {
                 this.setState(getLocalStorageItem<any>(name, {}));
             }
 
             componentWillUpdate(nextProps, nextState) {
-                    if (whiteListObject) {
-                        let newState = {};
-                        Object.keys(whiteListObject).forEach((allowedKey) => {
-                            if (!!nextState[allowedKey]) {
-                                newState[allowedKey] = nextState[allowedKey];
-                            }
-                        });
-                        saveLocalStorageItem(name, newState);
-                    } else {
-                        saveLocalStorageItem(name, nextState);
-                    }
+                if (whiteListObject) {
+                    let newState = {};
+                    Object.keys(whiteListObject).forEach((allowedKey) => {
+                        if (!!nextState[allowedKey]) {
+                            newState[allowedKey] = nextState[allowedKey];
+                        }
+                    });
+                    saveLocalStorageItem(name, newState);
+                } else {
+                    saveLocalStorageItem(name, nextState);
                 }
-
             }
 
-    return LocalStorageComponent
-}
+        }
+
+        return LocalStorageComponent
+    }
