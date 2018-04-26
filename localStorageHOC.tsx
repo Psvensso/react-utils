@@ -4,6 +4,7 @@ export function getLocalStorageItem<T>(key: string, ifNull: T) {
         var item = localStorage.getItem(key);
         return item === null ? ifNull : JSON.parse(item);
     } catch (e) {
+        localStorage.removeItem(key);
         return ifNull;
     }
 }
@@ -11,7 +12,9 @@ export function getLocalStorageItem<T>(key: string, ifNull: T) {
 export function saveLocalStorageItem(key: string, item) {
     try {
         localStorage.setItem(key, JSON.stringify(item));
-    } catch (e) { }
+    } catch (e) {
+        localStorage.removeItem(key);
+    }
 }
 
 let hasLocalStorage = !!localStorage;
@@ -33,7 +36,6 @@ interface LocalStorageHOCOptions {
     whiteListObject?: MapLike<boolean>;
 }
 
-
 export const savesStateTolocalStorage = (args: LocalStorageHOCOptions) =>
     <TOriginalProps extends {}>(Component: (React.ComponentClass<TOriginalProps>)): React.ComponentClass<TOriginalProps> => {
         const { storrageKey, whiteListObject } = args;
@@ -45,13 +47,18 @@ export const savesStateTolocalStorage = (args: LocalStorageHOCOptions) =>
 
         let name = storrageKey;
 
-        class LocalStorageComponent extends React.Component<TOriginalProps, {}> {
-
+        class LocalStorageComponent extends Component {
+            componentDidCatch() {
+                localStorage.removeItem(name);
+            }
             componentWillMount() {
                 this.setState(getLocalStorageItem<any>(name, {}));
             }
 
             componentWillUpdate(nextProps, nextState) {
+                if (this.state === nextState) {
+                    return;
+                }
                 if (whiteListObject) {
                     let newState = {};
                     Object.keys(whiteListObject).forEach((allowedKey) => {
@@ -64,7 +71,6 @@ export const savesStateTolocalStorage = (args: LocalStorageHOCOptions) =>
                     saveLocalStorageItem(name, nextState);
                 }
             }
-
         }
 
         return LocalStorageComponent
