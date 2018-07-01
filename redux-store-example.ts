@@ -17,8 +17,6 @@ interface MapLike<T> {
     [index: string]: T;
 }
 
-
-
 /**
  * getStore
  * Wraps store in a 'singleton' function,
